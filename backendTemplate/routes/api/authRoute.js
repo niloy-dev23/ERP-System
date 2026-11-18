@@ -1,0 +1,48 @@
+const express = require('express')
+const router = express.Router()
+const {
+    registration,
+    verifyEmail,
+    resendVerification,
+    login,
+    refreshAccessToken,
+    logout,
+    forgotPassword,
+    resetPassword,
+    getMe
+} = require('../../controller/authController')
+const { protect, isAdmin } = require('../../middleware/authMiddleware')
+const limiter = require('../../middleware/limiter')
+const userController = require('../../controller/userController')
+
+router.post('/registration', registration)
+router.post('/login',limiter, login)
+router.post('/refresh', refreshAccessToken)
+router.post('/logout', logout)
+router.get('/verify-email', verifyEmail)
+router.post('/verify-email', verifyEmail)
+router.post('/resend-verification', resendVerification)
+router.post('/forgot-password', forgotPassword)
+router.get('/reset-password', (req, res) => {
+    const { token } = req.query
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: 'Reset token is required. Submit a POST request with token and new password.'
+        })
+    }
+    return res.status(200).json({
+        success: true,
+        message: 'Valid reset link received. Submit a POST request to this endpoint with token, password, and optional confirmPassword.',
+        data: { token }
+    })
+})
+router.post('/reset-password', resetPassword)
+router.get('/me', protect, getMe)
+router.get('/getAll', protect, userController.getAllUser)
+router.patch('/approve/:id', isAdmin, userController.approveUser)
+router.patch('/disapprove/:id', isAdmin, userController.disapproveUser)
+router.get('/getSingle/:id', protect, userController.getSingle)
+router.patch('/update/:id', protect, userController.updateUser)
+
+module.exports = router
