@@ -48,7 +48,7 @@ const getSingle =async (req, res)=>{
     const userId = req.params.id
     try{
         const singleUser = await userModel.findOne({_id: userId})
-        if(!user){
+        if(!singleUser){
             return res.status(400).json({
                 success:false,
                 message:"No User Found"

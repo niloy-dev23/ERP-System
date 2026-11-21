@@ -1,12 +1,15 @@
 const taskModel = require('../models/taskModel')
 
 const createTask = async (req, res) =>{
-    const {title, description, deadline, status} = req.body
+    const {title, description, deadline, status, assignedTo} = req.body
     try{
         const task = await taskModel.create({
-            title, description, deadline, status
+            title, description, deadline, status, assignedTo
         })
-        if(!title || !description || !deadline || !status){
+
+        await task.populate('assignedTo', 'username email role')
+
+        if(!title || !description || !deadline || !status || !assignedTo){
             return res.status(400).json({
                 success:false,
                 message:"All fields are required"
@@ -47,11 +50,12 @@ const createTask = async (req, res) =>{
 
 const updateTask = async (req, res) =>{
     const {id} = req.params
-    const {title, description, deadline, status} = req.body
+    const {title, description, deadline, status, assignedTo} = req.body
     try{
         const task = await taskModel.findByIdAndUpdate(id, {
-            title, description, deadline, status
+            title, description, deadline, status, assignedTo
         }, {new:true})
+
         if(!task){
             return res.status(404).json({
                 success:false,
@@ -101,7 +105,7 @@ const deleteTask = async (req, res) =>{
 
 const getAllTasks = async (req, res) =>{
     try{
-        const tasks = await taskModel.find()
+        const tasks = await taskModel.find().populate('assignedTo', 'username email role')
         res.status(200).json({
             success:true,
             message:"Tasks Retrieved Successfully",
@@ -120,7 +124,7 @@ const getAllTasks = async (req, res) =>{
 const getSingleTask = async (req, res) =>{
     const {id} = req.params
     try{
-        const task = await taskModel.findById(id)
+        const task = await taskModel.findById(id).populate('assignedTo', 'username email role')
         if(!task){
             return res.status(404).json({
                 success:false,
@@ -143,10 +147,29 @@ const getSingleTask = async (req, res) =>{
     }
 }
 
+const taskByUser = async (req, res) => {
+    const userId = req.user._id
+    try {
+        const tasks = await taskModel.find({ assignedTo: userId }).populate('assignedTo', 'username email role')
+        res.status(200).json({
+            success: true,
+            message: "Tasks Retrieved Successfully",
+            data: tasks
+        })
+    }
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Tasks Retrieval Failed",
+            errorMsg: err
+        })
+    }
+}
 module.exports = {
     createTask,
     updateTask,
     deleteTask,
+    taskByUser,
     getAllTasks,
     getSingleTask
 }

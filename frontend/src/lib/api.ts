@@ -77,7 +77,7 @@ export const tokenStore = {
     const raw = readStorage(USER_KEY);
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as UserRecord;
+      return normalizeUser(JSON.parse(raw) as RawUser);
     } catch {
       return null;
     }
@@ -232,8 +232,8 @@ export function normalizeUser(raw: RawUser): UserRecord {
     username: raw.username ?? "",
     email: raw.email ?? "",
     isEmailVerified: Boolean(raw.isEmailVerified),
-    role: raw.role,
-    status: raw.status,
+    role: raw.role ?? "user",
+    status: raw.status ?? true,
   };
 }
 
@@ -364,7 +364,17 @@ export const api = {
       method: "PATCH",
       body: input,
     });
-    return unwrap(payload);
+    const task = unwrap(payload);
+    // PATCH /updateTask returns the raw document, while the API only populates
+    // assignedTo on GET. Re-fetch so callers always receive the assignee.
+    if (task && typeof task.assignedTo === "string") {
+      try {
+        return await api.getTask(task._id);
+      } catch {
+        return task;
+      }
+    }
+    return task;
   },
 
   async deleteTask(id: string) {

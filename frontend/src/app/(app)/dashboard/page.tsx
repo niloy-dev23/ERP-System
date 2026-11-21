@@ -27,6 +27,7 @@ import {
   cn,
   deadlineState,
   formatDate,
+  getAssignee,
   isTaskOverdue,
   sortTasks,
 } from "@/lib/utils";
@@ -241,6 +242,7 @@ export default function DashboardPage() {
               {stats.upcoming.slice(0, 5).map((task) => {
                 const meta = STATUS_META[task.status];
                 const deadline = new Date(task.deadline);
+                const assignee = getAssignee(task);
                 return (
                   <li key={task._id}>
                     <Link
@@ -266,6 +268,14 @@ export default function DashboardPage() {
                           <span className="text-[10px] text-muted">
                             {deadlineState(task.deadline).label}
                           </span>
+                          {assignee ? (
+                            <span className="inline-flex min-w-0 items-center gap-1 text-[10px] text-muted">
+                              <Avatar name={assignee.username} size="xxs" />
+                              <span className="max-w-[96px] truncate">
+                                {assignee.username}
+                              </span>
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <ArrowUpRight className="size-4 shrink-0 text-muted/50 transition group-hover:text-accent" />

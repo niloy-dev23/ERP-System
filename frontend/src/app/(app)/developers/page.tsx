@@ -70,12 +70,13 @@ const GROUPS: Array<{ name: string; description: string; endpoints: Endpoint[] }
   },
   {
     name: "Tasks",
-    description: "Task retrieval for every member and mutations for admins.",
+    description:
+      "Task retrieval for every member and mutations for admins. Responses include the populated assignee.",
     endpoints: [
-      { method: "GET", path: "/getAllTask", description: "Retrieve every task in the workspace.", auth: true },
-      { method: "GET", path: "/getSingleTask/:id", description: "Fetch one task by ID.", auth: true },
-      { method: "POST", path: "/createTask", description: "Create a task with title, description, deadline, and status.", auth: true, admin: true },
-      { method: "PATCH", path: "/updateTask/:id", description: "Update all task fields.", auth: true, admin: true },
+      { method: "GET", path: "/getAllTask", description: "Retrieve every task with its assigned member populated.", auth: true },
+      { method: "GET", path: "/getSingleTask/:id", description: "Fetch one task by ID, including its assignee.", auth: true },
+      { method: "POST", path: "/createTask", description: "Create a task with title, description, deadline, status, and assignedTo.", auth: true, admin: true },
+      { method: "PATCH", path: "/updateTask/:id", description: "Update task fields, including the assigned member.", auth: true, admin: true },
       { method: "DELETE", path: "/deleteTask/:id", description: "Permanently remove a task.", auth: true, admin: true },
     ],
   },
@@ -315,7 +316,19 @@ curl http://localhost:8000/api/v1/getAllTask \\
               <code>{`{
   "success": true,
   "message": "Tasks Retrieved Successfully",
-  "data": [ ... ]
+  "data": [
+    {
+      "_id": "task-id",
+      "title": "Ship the release",
+      "status": "todo",
+      "assignedTo": {
+        "_id": "user-id",
+        "username": "Ada Lovelace",
+        "email": "ada@example.com",
+        "role": "employee"
+      }
+    }
+  ]
 }`}</code>
             </pre>
             <Alert variant="info" title="Status codes to expect">

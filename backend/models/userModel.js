@@ -91,6 +91,8 @@ userSchema.methods.toSafeObject = function () {
         profilePic: this.profilePic,
         address: this.address,
         gender: this.gender,
+        role: this.role,
+        status: this.status,
         isEmailVerified: this.isEmailVerified,
         createdAt: this.createdAt,
         updatedAt: this.updatedAt

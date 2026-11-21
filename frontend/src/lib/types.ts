@@ -19,6 +19,8 @@ export interface SafeUser {
   profilePic?: string;
   address?: string;
   gender?: Gender;
+  role?: Role;
+  status?: boolean;
   isEmailVerified: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -28,8 +30,6 @@ export interface SafeUser {
 export interface RawUser extends Omit<SafeUser, "id"> {
   _id?: string;
   id?: string;
-  role?: Role;
-  status?: boolean;
 }
 
 export interface UserRecord extends SafeUser {
@@ -38,7 +38,7 @@ export interface UserRecord extends SafeUser {
 }
 
 export interface AuthPayload {
-  user: SafeUser;
+  user: UserRecord;
   accessToken: string;
   token: string;
   refreshToken: string;
@@ -50,12 +50,26 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+/** The subset of a user document embedded in a populated task. */
+export interface TaskAssignee {
+  _id?: string;
+  id?: string;
+  username: string;
+  email?: string;
+  role?: Role;
+}
+
 export interface Task {
   _id: string;
   title: string;
   description: string;
   deadline: string;
   status: TaskStatus;
+  /**
+   * Populated by GET /getAllTask and GET /getSingleTask. Create/update
+   * responses may contain only the raw ObjectId string until re-fetched.
+   */
+  assignedTo?: TaskAssignee | string | null;
   createdAt?: string;
   updatedAt?: string;
   __v?: number;
@@ -66,6 +80,8 @@ export interface TaskInput {
   description: string;
   deadline: string;
   status: TaskStatus;
+  /** ObjectId of the user the task is assigned to (required by the API). */
+  assignedTo: string;
 }
 
 export interface UserInput {

@@ -26,15 +26,27 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function withSafeUser(user: SafeUser): UserRecord {
-  return { ...user, role: undefined, status: true };
+  return {
+    ...user,
+    role: user.role ?? "user",
+    status: user.status ?? true,
+  };
 }
 
 async function hydrateFullProfile(minimal: SafeUser): Promise<UserRecord> {
+  const base = withSafeUser(minimal);
+
+  // Login and /me now return role/status directly. Only fall back to the
+  // single-user endpoint when those fields are missing (e.g. older API).
+  if (minimal.role != null && typeof minimal.status === "boolean") {
+    return base;
+  }
+
   try {
-    const full = await api.getUser(minimal.id);
-    return full;
+    const full = await api.getUser(base.id);
+    return withSafeUser({ ...base, ...full });
   } catch {
-    return withSafeUser(minimal);
+    return base;
   }
 }
 
@@ -153,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       ready,
-      isAdmin: user?.role === "admin",
+      isAdmin: user?.role?.toLowerCase() === "admin",
       login,
       logout,
       refreshUser,

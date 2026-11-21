@@ -1,8 +1,8 @@
 # TaskFlow — workspace frontend for the Express API
 
 A production-quality Next.js frontend for the existing Express/Node task API in
-`../backendTemplate`. The backend is treated as a fixed contract: **no backend
-files were modified** to make this UI work.
+`../backend`. The backend is treated as a fixed contract: **no backend files were
+modified** to make this UI work.
 
 The app provides authentication, a task board, a team directory with admin
 approvals, profile management, and an in-app API explorer. It is built with the
@@ -18,8 +18,11 @@ Next.js App Router, TypeScript, and Tailwind CSS v4.
 - **Real auth lifecycle.** JWT access tokens plus rotating refresh tokens,
   automatic refresh-and-retry once on `401`, and server-side logout that revokes
   the refresh token.
-- **Role-aware UI.** Admins can create, edit, approve, pause, and delete.
+- **Role-aware UI.** Admins can create, edit, assign, approve, pause, and delete.
   Members get read-only task views and cannot see admin mutations.
+- **Task assignment.** New and updated tasks include the required `assignedTo`
+  user reference. The board, list, dashboard, and detail views surface the
+  populated assignee returned by the API.
 - **Complete auth flows.** Login, registration, email verification, resend
   verification, forgot password, and reset password.
 - **Polished shell.** Responsive sidebar/topbar, light and dark themes, toasts,
@@ -52,7 +55,7 @@ No component library or data-fetching library is required.
 
 ```bash
 # 1. Start the backend (from the backend directory)
-cd "../backendTemplate"
+cd "../backend"
 npm install
 npm start            # http://localhost:8000
 
@@ -167,10 +170,10 @@ All paths are relative to `/api/v1` and proxied through `/api/backend`.
 | Directory            | `GET /getAll?search=&role=`      | Excludes current user              |
 | Update profile       | `PATCH /update/:id`              |                                    |
 | Approve / pause      | `PATCH /approve/:id`, `/disapprove/:id` | Admin only                  |
-| List tasks           | `GET /getAllTask`                |                                    |
-| One task             | `GET /getSingleTask/:id`         |                                    |
-| Create task          | `POST /createTask`               | Admin only                         |
-| Update task          | `PATCH /updateTask/:id`          | Admin only                         |
+| List tasks           | `GET /getAllTask`                | Assignee populated                 |
+| One task             | `GET /getSingleTask/:id`         | Assignee populated                 |
+| Create task          | `POST /createTask`               | Admin only; `assignedTo` required  |
+| Update task          | `PATCH /updateTask/:id`          | Admin only; accepts `assignedTo`   |
 | Delete task          | `DELETE /deleteTask/:id`         | Admin only                         |
 
 ## Backend quirks handled by the UI
@@ -182,6 +185,14 @@ These are intentional frontend workarounds; the backend was not changed.
   `GET /getSingle/:id` so role-gated controls render correctly.
 - **`/getAll` ignores role when `search` is also present** (the controller
   overwrites `$or`). The directory therefore applies role filtering client-side.
+- **Tasks require an assignee.** The model marks `assignedTo` as required, so the
+  task form validates a member before submitting. The picker merges the
+  directory (which excludes the signed-in user) with the current user so admins
+  can self-assign.
+- **Populated vs. raw assignees.** List/detail endpoints populate `assignedTo`
+  with `username`, `email`, and `role`, while `PATCH /updateTask` returns the raw
+  document. The API client re-fetches after an update so the UI always has the
+  populated assignee.
 - **Deadlines are strings.** The UI sends ISO strings, validates that new
   deadlines are in the future, and treats unparseable values as "No deadline".
 - **Completed tasks.** Deadline badges show "Completed" rather than "Overdue"
@@ -268,5 +279,5 @@ npm run build
 
 ---
 
-The Express backend in `../backendTemplate` is unmodified. All integration
-compromises are resolved inside this frontend and documented above.
+The Express backend in `../backend` is unmodified. All integration compromises
+are resolved inside this frontend and documented above.

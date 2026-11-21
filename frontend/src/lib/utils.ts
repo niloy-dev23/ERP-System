@@ -1,4 +1,4 @@
-import type { Gender, Role, Task, TaskStatus } from "./types";
+import type { Gender, Role, Task, TaskAssignee, TaskStatus } from "./types";
 
 export function cn(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -195,6 +195,21 @@ export function isTaskOverdue(task: Task) {
   const date = new Date(task.deadline);
   if (Number.isNaN(date.getTime())) return false;
   return date.getTime() < Date.now();
+}
+
+/** The populated assignee object, or null when only an id (or nothing) is present. */
+export function getAssignee(task: Task): TaskAssignee | null {
+  const assignee = task.assignedTo;
+  if (!assignee || typeof assignee === "string") return null;
+  return assignee;
+}
+
+/** The assignee's ObjectId, whether the API returned it populated or raw. */
+export function assigneeId(task: Task): string {
+  const assignee = task.assignedTo;
+  if (!assignee) return "";
+  if (typeof assignee === "string") return assignee;
+  return assignee._id ?? assignee.id ?? "";
 }
 
 /** Convert an ISO-ish date string to the value expected by datetime-local. */

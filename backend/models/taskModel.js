@@ -18,6 +18,11 @@ const taskSchema = new Schema({
         type:String,
         enum:['todo', 'pending', 'archive', 'done'],
         default:'todo'
+    },
+    assignedTo:{
+        type:Schema.Types.ObjectId,
+        ref:'User',
+        required:true
     }
 })
 

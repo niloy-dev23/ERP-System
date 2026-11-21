@@ -24,6 +24,7 @@ export function Badge({
 }
 
 const AVATAR_SIZES = {
+  xxs: "size-5 text-[9px]",
   xs: "size-7 text-[10px]",
   sm: "size-9 text-xs",
   md: "size-11 text-sm",

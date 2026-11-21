@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ArrowUpRight, CalendarClock, CheckCircle2, ChevronRight, Clock3 } from "lucide-react";
-import { Badge } from "@/components/ui/primitives";
+import { Avatar, Badge } from "@/components/ui/primitives";
 import type { Task, TaskStatus } from "@/lib/types";
 import {
   STATUS_META,
   TASK_STATUSES,
   cn,
   deadlineState,
+  getAssignee,
   isTaskOverdue,
   truncate,
 } from "@/lib/utils";
@@ -42,6 +43,7 @@ export function DeadlineBadge({ task, className }: { task: Task; className?: str
 
 export function TaskCard({ task }: { task: Task }) {
   const meta = STATUS_META[task.status];
+  const assignee = getAssignee(task);
   return (
     <Link
       href={`/tasks/${task._id}`}
@@ -59,8 +61,16 @@ export function TaskCard({ task }: { task: Task }) {
       <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted">
         {truncate(task.description, 110)}
       </p>
-      <div className="mt-3 flex items-center gap-2 border-t border-line pt-2.5">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
         <DeadlineBadge task={task} />
+        {assignee ? (
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-muted">
+            <Avatar name={assignee.username} size="xxs" />
+            <span className="max-w-[86px] truncate">{assignee.username}</span>
+          </span>
+        ) : (
+          <span className="text-[10px] italic text-muted">Unassigned</span>
+        )}
       </div>
     </Link>
   );
@@ -124,12 +134,14 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
       <div className="hidden items-center gap-4 border-b border-line bg-surface-2/60 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted md:flex">
         <span className="flex-1">Task</span>
         <span className="w-32">Status</span>
+        <span className="w-40">Assignee</span>
         <span className="w-52">Deadline</span>
         <span className="w-6" />
       </div>
       <div className="divide-y divide-line">
         {tasks.map((task) => {
           const meta = STATUS_META[task.status];
+          const assignee = getAssignee(task);
           return (
             <Link
               key={task._id}
@@ -149,6 +161,16 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               </div>
               <div className="pl-5 md:w-32 md:pl-0">
                 <Badge className={meta.badge}>{meta.label}</Badge>
+              </div>
+              <div className="pl-5 md:w-40 md:pl-0">
+                {assignee ? (
+                  <span className="inline-flex max-w-full items-center gap-1.5 text-[11px] text-ink-soft">
+                    <Avatar name={assignee.username} size="xxs" />
+                    <span className="truncate">{assignee.username}</span>
+                  </span>
+                ) : (
+                  <span className="text-[11px] italic text-muted">Unassigned</span>
+                )}
               </div>
               <div className="pl-5 md:w-52 md:pl-0">
                 <span

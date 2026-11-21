@@ -22,6 +22,7 @@ import {
   STATUS_META,
   TASK_STATUSES,
   cn,
+  getAssignee,
   sortTasks,
 } from "@/lib/utils";
 
@@ -42,10 +43,13 @@ export default function TasksPage() {
     const query = search.trim().toLowerCase();
     let next = tasks.filter((task) => {
       const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+      const assignee = getAssignee(task);
       const matchesQuery =
         !query ||
         task.title.toLowerCase().includes(query) ||
-        task.description.toLowerCase().includes(query);
+        task.description.toLowerCase().includes(query) ||
+        Boolean(assignee?.username.toLowerCase().includes(query)) ||
+        Boolean(assignee?.email?.toLowerCase().includes(query));
       return matchesStatus && matchesQuery;
     });
 
@@ -76,7 +80,7 @@ export default function TasksPage() {
       <PageHeader
         eyebrow="Workspace"
         title="Tasks"
-        description="Plan, track, and move work through the pipeline. Deadlines come straight from the API."
+        description="Plan, track, and move work through the pipeline. Deadlines and assigned owners come straight from the API."
         actions={
           isAdmin ? (
             <Button onClick={() => setComposeOpen(true)} leadingIcon={<Plus className="size-4" />}>
@@ -114,7 +118,7 @@ export default function TasksPage() {
             <TextInput
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search tasks by title or description..."
+              placeholder="Search by title, description, or assignee..."
               aria-label="Search tasks"
               leadingIcon={<Search className="size-4" />}
               className="h-9 rounded-lg text-[13px]"

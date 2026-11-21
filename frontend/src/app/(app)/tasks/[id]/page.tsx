@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
+  ArrowUpRight,
   CalendarClock,
   CircleAlert,
   Clock3,
@@ -12,8 +13,9 @@ import {
   Hash,
   Pencil,
   Trash2,
+  UserRound,
 } from "lucide-react";
-import { Badge, EmptyState, Skeleton } from "@/components/ui/primitives";
+import { Avatar, Badge, EmptyState, Skeleton } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/modal";
@@ -23,10 +25,13 @@ import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
 import type { Task } from "@/lib/types";
 import {
+  ROLE_META,
   STATUS_META,
+  assigneeId,
   cn,
   deadlineState,
   formatDateTime,
+  getAssignee,
   getErrorMessage,
   isTaskOverdue,
 } from "@/lib/utils";
@@ -112,6 +117,9 @@ export default function TaskDetailPage() {
   const meta = STATUS_META[task.status];
   const due = deadlineState(task.deadline);
   const overdue = isTaskOverdue(task);
+  const assignee = getAssignee(task);
+  const assigneeKey = assigneeId(task);
+  const assigneeRole = assignee?.role ? ROLE_META[assignee.role] : null;
 
   return (
     <div className="space-y-5">
@@ -188,6 +196,60 @@ export default function TaskDetailPage() {
         </section>
 
         <aside className="space-y-4">
+          <section className="surface-card">
+            <div className="flex items-center gap-2 border-b border-line px-5 py-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
+                <UserRound className="size-4" />
+              </span>
+              <div>
+                <h2 className="text-sm font-semibold text-ink">Assignment</h2>
+                <p className="text-[11px] text-muted">Who owns this task</p>
+              </div>
+            </div>
+            <div className="px-5 py-4">
+              {assignee ? (
+                <div className="flex items-center gap-3">
+                  <Avatar name={assignee.username} size="md" />
+                  <div className="min-w-0 flex-1">
+                    {assigneeKey ? (
+                      <Link
+                        href={`/team/${assigneeKey}`}
+                        className="block truncate text-[13px] font-semibold text-ink transition hover:text-accent"
+                      >
+                        {assignee.username}
+                      </Link>
+                    ) : (
+                      <p className="truncate text-[13px] font-semibold text-ink">
+                        {assignee.username}
+                      </p>
+                    )}
+                    {assignee.email ? (
+                      <p className="truncate text-[11px] text-muted">{assignee.email}</p>
+                    ) : null}
+                    {assigneeRole ? (
+                      <Badge className={cn("mt-1.5", assigneeRole.className)}>
+                        {assigneeRole.label}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  {assigneeKey ? (
+                    <Link
+                      href={`/team/${assigneeKey}`}
+                      className="rounded-md p-1.5 text-muted transition hover:bg-surface-2 hover:text-ink"
+                      aria-label={`View ${assignee.username}'s profile`}
+                    >
+                      <ArrowUpRight className="size-3.5" />
+                    </Link>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-[11px] leading-relaxed text-muted">
+                  No workspace member is assigned to this task yet.
+                </p>
+              )}
+            </div>
+          </section>
+
           <section className="surface-card">
             <div className="border-b border-line px-5 py-4">
               <h2 className="text-sm font-semibold text-ink">Schedule</h2>

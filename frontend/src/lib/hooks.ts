@@ -37,7 +37,7 @@ export function useTasks() {
   return { tasks, loading, error, refresh: load, setTasks };
 }
 
-export function useUsers() {
+export function useUsers(enabled = true) {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,12 +59,16 @@ export function useUsers() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     alive.current = true;
     load();
     return () => {
       alive.current = false;
     };
-  }, [load]);
+  }, [load, enabled]);
 
   return { users, loading, error, refresh: load, setUsers };
 }
